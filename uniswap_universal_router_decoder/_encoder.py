@@ -449,6 +449,36 @@ class _V4ChainedSwapFunctionBuilder(_V4ChainedCommonFunctionBuilder):
         self._add_action(V4Actions.SWAP_EXACT_IN, args)
         return self
 
+    def v2_swap_exact_in_pharaoh_bytes(
+            self,
+            function_recipient: FunctionRecipient,
+            amount_in: Wei,
+            amount_out_min: Wei,
+            path: Sequence[ChecksumAddress],
+            custom_recipient: Optional[ChecksumAddress] = None,
+            payer_is_sender: bool = True) -> _ChainedFunctionBuilder:
+        def pack_route(addresses: Sequence[ChecksumAddress]) -> bytes:
+            # First encode the offset (32 bytes pointing to 0x20)
+            encoded = (32).to_bytes(32, byteorder='big')
+
+            # Encode the length of the array as 1 (not the length of addresses)
+            encoded += (1).to_bytes(32, byteorder='big')
+
+            # Add each address with proper padding to 32 bytes
+            for addr in addresses:
+                # Pad address to 32 bytes (12 bytes of 0s + 20 bytes address)
+                encoded += bytes(12) + decode_hex(addr[2:])  # remove '0x' prefix
+
+            # Add the boolean false (32 bytes of 0)
+            encoded += (0).to_bytes(32, byteorder='big')
+
+            return encoded
+
+        recipient = self._get_recipient(function_recipient, custom_recipient)
+        args = (recipient, amount_in, amount_out_min, (pack_route(path)), payer_is_sender)
+        self._add_command(RouterFunction.V2_SWAP_EXACT_IN, args)
+        return self
+                
     def swap_exact_out_single(
             self,
             pool_key: PoolKey,
