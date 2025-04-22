@@ -172,7 +172,8 @@ class _ABIBuilder:
             # mapping between command identifier and function abi
             RouterFunction.V3_SWAP_EXACT_IN: self._build_v3_swap_exact_in(),
             RouterFunction.V3_SWAP_EXACT_OUT: self._build_v3_swap_exact_out(),
-            RouterFunction.V2_SWAP_EXACT_IN: self._build_v2_swap_exact_in(),
+            # RouterFunction.V2_SWAP_EXACT_IN: self._build_v2_swap_exact_in(),
+            RouterFunction.V2_SWAP_EXACT_IN: self._build_v2_swap_exact_in_pharaoh_bytes(),
             RouterFunction.V2_SWAP_EXACT_OUT: self._build_v2_swap_exact_out(),
             RouterFunction.PERMIT2_PERMIT: self._build_permit2_permit(),
             RouterFunction.WRAP_ETH: self._build_wrap_eth(),
@@ -218,7 +219,18 @@ class _ABIBuilder:
         builder = FunctionABIBuilder(RouterFunction.V2_SWAP_EXACT_IN.name)
         builder.add_address("recipient").add_uint256("amountIn").add_uint256("amountOutMin").add_address_array("path")
         return builder.add_bool("payerIsSender").build()
+        
+    @staticmethod
+    def _build_v2_swap_exact_in_pharaoh_bytes() -> FunctionABI:
+        builder = FunctionABIBuilder(RouterFunction.V2_SWAP_EXACT_IN.name)
 
+        builder.add_address("recipient").add_uint256("amountIn") \
+            .add_uint256("amountOutMin") \
+            .add_bytes("path") \
+            .add_bool("payerIsSender")
+
+        return builder.build()
+        
     @staticmethod
     def _build_permit2_permit() -> FunctionABI:
         builder = FunctionABIBuilder(RouterFunction.PERMIT2_PERMIT.name)
